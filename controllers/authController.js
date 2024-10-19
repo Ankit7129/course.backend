@@ -3,10 +3,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
 const College = require('../models/College');
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5000'; // Default to localhost if not in environment
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000'; // Default to localhost if not in environment
 
-
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5000'; // API server URL
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000'; // Frontend URL
 
 // Send reset password email
 const sendResetEmail = async (req, res) => {
@@ -26,7 +25,7 @@ const sendResetEmail = async (req, res) => {
 
     // Create a reset token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const resetUrl = `${CLIENT_URL}/reset-password/${token}`; // Redirect to your frontend route
+    const resetUrl = `${CLIENT_URL}/reset-password/${token}`; // Frontend reset password URL
 
     // Nodemailer setup
     const transporter = nodemailer.createTransport({
@@ -93,9 +92,7 @@ const resetPassword = async (req, res) => {
   }
 };
 
-
-
-
+// Send verification email
 const sendVerificationEmail = async (user, userType) => {
   try {
     // Create a verification token
@@ -129,6 +126,8 @@ const sendVerificationEmail = async (user, userType) => {
     return { success: false, error }; // Return error information for handling
   }
 };
+
+
 
 // Verify email
 const verifyEmail = async (req, res) => {
