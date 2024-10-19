@@ -3,8 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
 const College = require('../models/College');
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5000'; // Backend URL
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000'; // Frontend URL
+const BASE_URL = process.env.BASE_URL // Backend URL
+const CLIENT_URL = process.env.CLIENT_URL ; // Frontend URL
 
 // Send reset password email
 const sendResetEmail = async (req, res) => {
