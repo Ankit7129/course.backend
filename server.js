@@ -16,6 +16,9 @@ connectDB();
 
 // Middleware
 app.use(express.json()); // Parse JSON bodies
+
+app.use(express.urlencoded({ extended: true }));
+
 app.use(cors());
 
 // Define Routes

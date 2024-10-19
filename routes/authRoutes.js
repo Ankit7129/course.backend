@@ -1,11 +1,12 @@
 const express = require('express');
-const { sendResetEmail, resetPassword ,verifyEmail ,  sendVerificationEmail , resendVerificationEmail } = require('../controllers/authController');
+const { sendResetEmail,  renderResetPasswordPage ,verifyEmail ,  sendVerificationEmail , resendVerificationEmail, resetPassword } = require('../controllers/authController');
 const router = express.Router();
 
 // Send reset password email
 router.post('/forgot-password', sendResetEmail);
 
 // Reset password using token
+router.get('/reset-password/:token', renderResetPasswordPage);
 router.post('/reset-password/:token', resetPassword);
 
 // Verify email address

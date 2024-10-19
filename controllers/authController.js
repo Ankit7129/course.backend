@@ -3,8 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
 const College = require('../models/College');
-
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5000'; // API server URL
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5000'; // Backend URL
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000'; // Frontend URL
 
 // Send reset password email
@@ -25,7 +24,7 @@ const sendResetEmail = async (req, res) => {
 
     // Create a reset token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const resetUrl = `${CLIENT_URL}/reset-password/${token}`; // Frontend reset password URL
+    const resetUrl = `${BASE_URL}/api/auth/reset-password/${token}`; // Backend reset link
 
     // Nodemailer setup
     const transporter = nodemailer.createTransport({
@@ -53,7 +52,46 @@ const sendResetEmail = async (req, res) => {
   }
 };
 
-// Reset password logic
+// Render reset password page (GET request)
+// Render reset password page (GET request)
+const renderResetPasswordPage = (req, res) => {
+  const { token } = req.params;
+
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Render the reset password form
+    res.status(200).send(`
+      <html>
+        <head>
+          <title>Reset Password</title>
+          <style>
+            /* Basic styling */
+            body { font-family: Arial, sans-serif; }
+            h1 { color: #333; }
+            form { max-width: 300px; margin: auto; }
+            input, button { display: block; width: 100%; padding: 10px; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <h1>Reset Your Password</h1>
+          <form action="/api/auth/reset-password/${token}" method="POST">
+            <label for="newPassword">New Password:</label>
+            <input type="password" id="newPassword" name="newPassword" required />
+            <button type="submit">Reset Password</button>
+          </form>
+        </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Error rendering reset password page:', error);
+    return res.status(400).send('Invalid or expired token.');
+  }
+};
+
+
+// Handle reset password (POST request)
 const resetPassword = async (req, res) => {
   const { token } = req.params;
   const { newPassword } = req.body;
@@ -78,21 +116,38 @@ const resetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    // Send success response
-    res.status(200).json({ message: 'Password reset successfully' });
+    // Redirect to the client URL with a success message
+    res.status(200).send(`
+      <html>
+        <head>
+          <title>Password Reset Success</title>
+          <meta http-equiv="refresh" content="3;url=${CLIENT_URL}" />
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; }
+            h1 { color: #28a745; }
+            p { font-size: 16px; }
+          </style>
+        </head>
+        <body>
+          <h1>Password Reset Successfully</h1>
+          <p>Your password has been updated. You will be redirected to the Home page in a few seconds...</p>
+          <a href="${CLIENT_URL}">Click here if you're not redirected.</a>
+        </body>
+      </html>
+    `);
   } catch (error) {
     console.error('Error resetting password:', error);
     if (error.name === 'JsonWebTokenError') {
-      return res.status(400).json({ message: 'Invalid token' });
+      return res.status(400).send('Invalid token.');
     }
     if (error.name === 'TokenExpiredError') {
-      return res.status(400).json({ message: 'Token has expired' });
+      return res.status(400).send('Token has expired.');
     }
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Send verification email
+
 const sendVerificationEmail = async (user, userType) => {
   try {
     // Create a verification token
@@ -126,8 +181,6 @@ const sendVerificationEmail = async (user, userType) => {
     return { success: false, error }; // Return error information for handling
   }
 };
-
-
 
 // Verify email
 const verifyEmail = async (req, res) => {
@@ -255,5 +308,5 @@ const resendVerificationEmail = async (req, res) => {
   }
 };
 
-module.exports = { sendResetEmail, resetPassword, sendVerificationEmail, verifyEmail ,     resendVerificationEmail 
+module.exports = { sendResetEmail, resetPassword, renderResetPasswordPage, sendVerificationEmail, verifyEmail ,     resendVerificationEmail 
 }
